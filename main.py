@@ -13,12 +13,11 @@ settings = read_txt(file)
 
 # Print message stating username and CSV file name
 print(f"Username: {settings['username']}")
-print(f"CSV file: {settings['filename']}")
+print(f"CSV File: {settings['filename']}")
 print(f"Analyzing...")
 
-# Sort the responses chronologically and determine the number
-# of failures at each hourly timestamp within the CSV file
-dates, response_failures, response_successes = response_sorting(workdir, settings["username"], settings["filename"])
+# Sort the responses chronologically and determine the number of failure and success responses at each hourly timestamp in the CSV file
+dates, response_failures, response_successes = response_sorting(workdir, settings['username'], settings['filename'])
 
 # Print the timestamp and num. of failures at each timestamp
 print("\nTimeStamp                Num. of Failures           Num. of Successes")
