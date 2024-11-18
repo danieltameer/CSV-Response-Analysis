@@ -18,13 +18,14 @@ print(f"Analyzing...")
 
 # Sort the responses chronologically and determine the number
 # of failures at each hourly timestamp within the CSV file
-dates, responses = response_sorting(workdir, settings["username"], settings["filename"])
+dates, response_failures, response_successes = response_sorting(workdir, settings["username"], settings["filename"])
 
 # Print the timestamp and num. of failures at each timestamp
-print("\nTimeStamp                Num. of Failures")
-print("-----------------------------------------")
+print("\nTimeStamp                Num. of Failures           Num. of Successes")
+print("---------------------------------------------------------------------")
 for i in range(len(dates)):
-    print(dates[i] + "         " + str(responses[i]))
+    print(dates[i] + "         " + str(response_failures[i]) + "                          " + str(response_successes[i]))
+print('')
 
-# Plot the number of failure responses over each hourly timestamp
-plot(dates, responses)
+# Plot the number of failure and success responses over each hourly timestamp
+plot(dates, response_failures, response_successes)

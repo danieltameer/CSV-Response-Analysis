@@ -9,7 +9,6 @@ def response_sorting(workdir, user, file):
     # Read CSV file
     authentications = pd.read_csv(f"{workdir}\\{file}")
 
-
     # Find the Timestamp column in the CSV
     for i in range(len(authentications.columns)):
         if (authentications.columns[i] == 'Timestamp'):
@@ -50,24 +49,38 @@ def response_sorting(workdir, user, file):
             response_col_num = j
             break
 
-    # Start an empty list to count the number of times each string appears in the CSV
+    # Start an empty list to count the number of times each 'Failure' string appears in the CSV
     num_failure_list = []
+
+    # Start an empty list to count the number of times each 'Success' string appears in the CSV
+    num_success_list = []
 
     # Loop through each index in the sorted_short_timestamps list
     for k in range(len(sorted_short_timestamps)):
         ts = sorted_short_timestamps[k]
 
         fail_counter = 0
+        success_counter = 0
         for l in range(len(timestamps)):
             if (ts in timestamps[l]):
-                #check if the username for this timestamp is the correct username to check failures against
-                
+
+                # Check if the username for this timestamp is the correct username to check failures against
                 if (authentications.iloc[l, username_col_num] == user):
-                    #check if the response was a failure
+                    
+                    # Check if the response was a failure
                     if (authentications.iloc[l, response_col_num] == "Failure"):
-                        fail_counter = fail_counter + 1 # increment the failure counter by 1
+                        fail_counter = fail_counter + 1 # Increment the failure counter by 1
+                    
+                    # Check if the response was a success
+                    elif (authentications.iloc[l, response_col_num] == "Success"):
+                        success_counter = success_counter + 1 # Increment the success counter by 1
+                    
+                    # Check if the response cell is empty or blank
+                    else:
+                        pass
 
         num_failure_list.append(fail_counter)
+        num_success_list.append(success_counter)
 
     # Define the format of your date strings
     date_format = "%Y-%m-%d %H"
@@ -83,8 +96,9 @@ def response_sorting(workdir, user, file):
     all_dates = []
     current_date = start_date
 
-    i = 0 # need a counter to iterate through num_failure_list list
+    i = 0 # Need a counter to iterate through num_failure_list
     response_failures = []
+
     while current_date <= end_date:
         all_dates.append(current_date)
 
@@ -92,10 +106,27 @@ def response_sorting(workdir, user, file):
         # if yes, append the index 'i' from num_failure_list list to num_failure_list_new list
         # if no, append 0 to num_failure_list_new list
         if current_date in dates:
+
             response_failures.append(num_failure_list[i])
             i += 1 # increment the counter by 1
         else:
             response_failures.append(0)
+
+        current_date += timedelta(hours = 1)  # Adjust the increment if needed (e.g., days, minutes)
+
+    # Loop through and check for successes now
+    current_date = start_date
+
+    i = 0 # Need a counter to iterate through num_success_list
+    response_successes = []
+
+    while current_date <= end_date:
+        if current_date in dates:
+
+            response_successes.append(num_success_list[i])
+            i += 1 # increment the counter by 1
+        else:
+            response_successes.append(0)
 
         current_date += timedelta(hours = 1)  # Adjust the increment if needed (e.g., days, minutes)
 
@@ -109,20 +140,26 @@ def response_sorting(workdir, user, file):
     for i in range(len(combined_dates)):
         combined_dates[i] += ":00"
 
-    return combined_dates, response_failures
+    return combined_dates, response_failures, response_successes
 
-def plot(x_values, y_values):
+def plot(x_values, y1_values, y2_values):
 
     # Set the size of the plot with a white background
     plt.figure(figsize=(20,10))
 
-    # Plot the data with markers
-    plt.plot(x_values, y_values)  
+    # Plot the failure data with markers
+    plt.plot(x_values, y1_values, '--', color='red', label='Failures')
+
+    # Plot the success data with markers
+    plt.plot(x_values, y2_values, ':', color='green', label='Successes')  
 
     # Add labels and title
     plt.xlabel("Timestamp", color = "black")
-    plt.ylabel("Number of Failues", color = "black")
-    plt.title("Response Failures vs. Time", color = "black")
+    plt.ylabel("Number of Responses", color = "black")
+    plt.title("Responses vs. Time", color = "black")
+
+    # Function add a legend
+    plt.legend(["Failures", "Successes"], loc="upper right")
 
     # Rotate x-axis labels to be vertical
     plt.xticks(rotation = 45, fontsize = 8)  
