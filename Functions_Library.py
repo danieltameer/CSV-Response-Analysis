@@ -4,12 +4,13 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from ast import literal_eval
 
+# Function to read and sort timestamps and reponses from CSV file
 def response_sorting(workdir, user, file):
 
     # Read CSV file
     authentications = pd.read_csv(f"{workdir}\\{file}")
 
-    # Find the Timestamp column in the CSV
+    # Find the timestamp column in the CSV file
     for i in range(len(authentications.columns)):
         if (authentications.columns[i] == 'Timestamp'):
             timestamp_col_num = i
@@ -56,30 +57,42 @@ def response_sorting(workdir, user, file):
     num_success_list = []
 
     # Loop through each index in the sorted_short_timestamps list
-    for k in range(len(sorted_short_timestamps)):
-        ts = sorted_short_timestamps[k]
+    for i in range(len(sorted_short_timestamps)):
 
+        # Store the timestamp as a variable
+        ts = sorted_short_timestamps[i]
+
+        # Start a failure counter
         fail_counter = 0
+
+        # Start a success counter
         success_counter = 0
-        for l in range(len(timestamps)):
-            if (ts in timestamps[l]):
+
+        # Loop through the timestamps list
+        for j in range(len(timestamps)):
+
+            # Check if the current sorted short timestamp is in one of the timestamp strings
+            if (ts in timestamps[j]):
 
                 # Check if the username for this timestamp is the correct username to check failures against
-                if (authentications.iloc[l, username_col_num] == user):
+                if (authentications.iloc[j, username_col_num] == user):
                     
                     # Check if the response was a failure
-                    if (authentications.iloc[l, response_col_num] == "Failure"):
-                        fail_counter = fail_counter + 1 # Increment the failure counter by 1
+                    if (authentications.iloc[j, response_col_num] == "Failure"):
+                        fail_counter = fail_counter + 1 # Increment failure counter by 1
                     
                     # Check if the response was a success
-                    elif (authentications.iloc[l, response_col_num] == "Success"):
-                        success_counter = success_counter + 1 # Increment the success counter by 1
+                    elif (authentications.iloc[j, response_col_num] == "Success"):
+                        success_counter = success_counter + 1 # Increment success counter by 1
                     
-                    # Check if the response cell is empty or blank
+                    # Pass if the response cell is empty or blank
                     else:
                         pass
-
+        
+        # Append the number of failures for this respective timestamp to num_failure_list
         num_failure_list.append(fail_counter)
+
+        # Append the number of failures for this respective timestamp to num_success_list
         num_success_list.append(success_counter)
 
     # Define the format of your date strings
@@ -94,41 +107,57 @@ def response_sorting(workdir, user, file):
 
     # Create a list of all dates within the range (assuming hourly increments)
     all_dates = []
+
+    # Set the current date to the start date initially
     current_date = start_date
 
-    i = 0 # Need a counter to iterate through num_failure_list
+    # Start a counter to iterate through num_failure_list
+    i = 0
+
+    # Start an empty list to append the number of failures at each index in dates
     response_failures = []
 
+    # Loop through each date until the current date is the end date
     while current_date <= end_date:
+
+        # Append the current date to a list of all dates
         all_dates.append(current_date)
 
-        # check if current_date is in the original dates list
-        # if yes, append the index 'i' from num_failure_list list to num_failure_list_new list
-        # if no, append 0 to num_failure_list_new list
+        # Check if current_date is in the original dates list
+        # If yes, append the index 'i' from num_failure_list list to num_failure_list_new list
+        # If no, append 0 to num_failure_list_new list
         if current_date in dates:
-
             response_failures.append(num_failure_list[i])
-            i += 1 # increment the counter by 1
+            i += 1 # Increment the counter by 1
         else:
             response_failures.append(0)
 
-        current_date += timedelta(hours = 1)  # Adjust the increment if needed (e.g., days, minutes)
+        # Adjust the increment if needed (e.g., days, minutes)
+        current_date += timedelta(hours = 1)  
 
-    # Loop through and check for successes now
+    # Set the current date to the start date initially
     current_date = start_date
 
-    i = 0 # Need a counter to iterate through num_success_list
+    # Start a counter to iterate through num_failure_list
+    i = 0
+
+    # Start an empty list to append the number of successes at each index in dates
     response_successes = []
 
+    # Loop through each date until the current date is the end date
     while current_date <= end_date:
-        if current_date in dates:
 
+        # Check if current_date is in the original dates list
+        # If yes, append the index 'i' from num_failure_list list to num_failure_list_new list
+        # If no, append 0 to num_failure_list_new list
+        if current_date in dates:
             response_successes.append(num_success_list[i])
-            i += 1 # increment the counter by 1
+            i += 1 # Increment the counter by 1
         else:
             response_successes.append(0)
 
-        current_date += timedelta(hours = 1)  # Adjust the increment if needed (e.g., days, minutes)
+        # Adjust the increment if needed (e.g., days, minutes)
+        current_date += timedelta(hours = 1)  
 
     # Convert the generated datetime objects back to strings
     all_date_strings = [date.strftime(date_format) for date in all_dates]
@@ -142,6 +171,7 @@ def response_sorting(workdir, user, file):
 
     return combined_dates, response_failures, response_successes
 
+# Function to plot response data over time, set plot configurations and display plot
 def plot(x_values, y1_values, y2_values):
 
     # Set the size of the plot with a white background
@@ -168,7 +198,7 @@ def plot(x_values, y1_values, y2_values):
     plt.tick_params(axis='x')
     plt.tick_params(axis='y')
 
-    # Optional: Add grid lines
+    # Add grid lines to the plot
     plt.grid(True)
     
     # Display the plot
@@ -176,15 +206,23 @@ def plot(x_values, y1_values, y2_values):
 
     return
 
+# Function to open, read, save username and CSV file name from a text file
 def read_txt(filename):
+
+    # Initialize a dictionary to store the settings in
     settings = {}
+
+    # Open the text file for reading, read each line and save the settings 
+    # as a key and value in the settings dictionary
     with open(filename,'r') as file:
+
+        # Loop through each line in the file
         for line in file:
-            # if line[0] == '#' or line[0] == '\n':
-            #     pass
-            # else:
-            line = line[:-1] #assuming each read variable has '/n' after it
+            line = line[:-1] # Assuming each read variable has '/n' after it
             ind = line.find('=')
             settings[line[0:ind-1]] = literal_eval(line[(ind+2):])
+
+        # Close the file
         file.close()
+
     return settings
