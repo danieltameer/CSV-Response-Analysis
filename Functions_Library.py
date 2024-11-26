@@ -1,14 +1,89 @@
 # Import required libraries and functions
 import pandas as pd
+import tkinter as tk
+from tkinter import filedialog
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
-from ast import literal_eval
+
+def find_string_in_csv(file_path, search_string, root):
+    flag = False
+    with open(file_path, mode='r', encoding='utf-8') as csvfile:
+        for line_num, line in enumerate(csvfile, start=1):
+            # Check from the 40th character onward
+            #print(line[48:-1])
+            if search_string == line[48:-1]:
+                flag = True
+                break
+            else:
+                flag = False
+        return flag
+
+def open_gui():
+    def browse_file():
+        # Open a file dialog and only allow selection of CSV files
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if file_path:
+            file_path_entry.delete(0, tk.END)
+            file_path_entry.insert(0, file_path)
+
+    def start_program():
+        # Get the text from the textboxes and close the GUI
+        nonlocal username, file_path
+        username = username_entry.get()
+        file_path = file_path_entry.get()
+
+        # Check the CSV file to ensure the username actually
+        # exists at one of the lines in the CSV
+        flag = find_string_in_csv(file_path, username, root)
+
+        if flag == True:
+            root.destroy()
+        else:
+            l4 = tk.Label(
+                root,text = 'Username not found in CSV file.',
+                fg='red')
+            l4.place(x=340,y=240)
+
+    # Initialize variables to store results
+    username = ""
+    file_path = ""
+
+    # Create the main application window
+    root = tk.Tk()
+    root.title("CSV Analysis Tool")
+    root.geometry("854x480")
+
+    # Create and place a label and textbox for the username
+    username_label = tk.Label(root, text="Username:")
+    username_label.pack(pady=10)
+    username_entry = tk.Entry(root, width=50)
+    username_entry.pack(pady=5)
+
+    # Create and place a label and textbox for the file path
+    file_path_label = tk.Label(root, text="CSV File Path:")
+    file_path_label.pack(pady=10)
+    file_path_entry = tk.Entry(root, width=50)
+    file_path_entry.pack(pady=5)
+
+    # Create and place a browse button next to the file path entry
+    browse_button = tk.Button(root, text="Browse...", command=browse_file)
+    browse_button.pack(pady=5)
+
+    # Create and place the "Start" button
+    start_button = tk.Button(root, text="Start", command=start_program)
+    start_button.pack(pady=20)
+
+    # Run the Tkinter main loop
+    root.mainloop()
+
+    # Return the results after the GUI is closed
+    return username, file_path
 
 # Function to read and sort timestamps and reponses from CSV file
-def response_sorting(workdir, user, file):
+def response_sorting(file, user):
 
     # Read CSV file
-    authentications = pd.read_csv(f"{workdir}\\{file}")
+    authentications = pd.read_csv(file)
 
     # Find the timestamp column in the CSV file
     for i in range(len(authentications.columns)):
@@ -175,7 +250,7 @@ def response_sorting(workdir, user, file):
 def plot(x_values, y1_values, y2_values):
 
     # Set the size of the plot with a white background
-    plt.figure(figsize=(20,10))
+    plt.figure(figsize=(20, 10))
 
     # Plot the failure data with markers
     plt.plot(x_values, y1_values, '--', color='red', label='Failures')
@@ -205,24 +280,3 @@ def plot(x_values, y1_values, y2_values):
     plt.show()
 
     return
-
-# Function to open, read, save username and CSV file name from a text file
-def read_txt(filename):
-
-    # Initialize a dictionary to store the settings in
-    settings = {}
-
-    # Open the text file for reading, read each line and save the settings 
-    # as a key and value in the settings dictionary
-    with open(filename,'r') as file:
-
-        # Loop through each line in the file
-        for line in file:
-            line = line[:-1] # Assuming each read variable has '/n' after it
-            ind = line.find('=')
-            settings[line[0:ind-1]] = literal_eval(line[(ind+2):])
-
-        # Close the file
-        file.close()
-
-    return settings

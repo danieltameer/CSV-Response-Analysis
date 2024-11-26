@@ -1,2 +1,0 @@
-filename = 'Authentications.csv'
-username = 'cccccc:fredd@gmail.com'
